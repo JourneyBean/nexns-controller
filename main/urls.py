@@ -28,7 +28,8 @@ router.register(r'status', main_views.StatusView, basename='status')
 router.register(r'user', user_views.UserView)
 router.register(r'domain', name_views.DomainView)
 router.register(r'zone', name_views.ZoneView)
-router.register(r'record', name_views.RecordView)
+router.register(r'rrset', name_views.RRsetView)
+router.register(r'record', name_views.RecordDataView)
 router.register(r'dump', name_views.DumpView, basename='dump')
 
 urlpatterns = [

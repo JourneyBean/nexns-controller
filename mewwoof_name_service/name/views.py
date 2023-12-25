@@ -1,6 +1,6 @@
 from rest_framework import viewsets, response
-from .models import Domain, Zone, Record
-from .serializers import DomainSerializer, ZoneSerializer, RecordSerializer
+from .models import Domain, Zone, RRset, RecordData
+from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
 
 
 class DomainView(viewsets.ModelViewSet):
@@ -15,13 +15,55 @@ class ZoneView(viewsets.ModelViewSet):
     serializer_class = ZoneSerializer
     
 
-class RecordView(viewsets.ModelViewSet):
+class RRsetView(viewsets.ModelViewSet):
 
-    queryset = Record.objects.all()
-    serializer_class = RecordSerializer
+    queryset = RRset.objects.all()
+    serializer_class = RRsetSerializer
+
+
+class RecordDataView(viewsets.ModelViewSet):
+
+    queryset = RecordData.objects.all()
+    serializer_class = RecordDataSerializer
 
 
 class DumpView(viewsets.ViewSet):
+
+    def dump_domain(self, domain: 'Domain'):
+        domain_data = DomainSerializer(domain).data
+        
+        zones = domain.zones.all().order_by('order')
+        zones_data = []
+        for zone in zones:
+
+            zone_data = ZoneSerializer(zone).data
+
+            rrsets = zone.rrsets.all().order_by('order')
+            rrsets_data = []
+
+            for rrset in rrsets:
+                rrset_data = RRsetSerializer(rrset).data
+                records_data = RecordDataSerializer(rrset.records, many=True).data
+                rrset_data['records'] = records_data
+
+                rrsets_data.append(rrset_data)
+
+            zone_data['rrsets'] = rrsets_data
+
+            zones_data.append(zone_data)
+
+        return {
+            'domain': domain_data,
+            'zones': zones_data
+        }
+
+    def list(self, request):
+
+        domains_data = []
+        for domain in Domain.objects.all():
+            domains_data.append(self.dump_domain(domain))
+
+        return response.Response(domains_data)
 
     def retrieve(self, request, pk: str, format=None):
 
@@ -29,21 +71,7 @@ class DumpView(viewsets.ViewSet):
             domain = Domain.objects.get(id=pk)
         else:
             domain = Domain.objects.get(domain=pk)
-        domain_serialized = DomainSerializer(domain).data
         
-        zones = domain.zones.all().order_by('order')
-        zones_serialized = []
-        for zone in zones:
+        domain_data = self.dump_domain(domain)
 
-            zone_serialized = ZoneSerializer(zone).data
-
-            records = zone.records.all().order_by('order')
-            records_serialized = RecordSerializer(records, many=True).data
-            zone_serialized['records'] = records_serialized
-
-            zones_serialized.append(zone_serialized)
-
-        return response.Response({
-            'domain': domain_serialized,
-            'zones': zones_serialized,
-        })
+        return response.Response(domain_data)

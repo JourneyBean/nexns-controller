@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Domain, Zone, Record
+from .models import Domain, Zone, RRset, RecordData
 
 
 class DomainSerializer(serializers.ModelSerializer):
@@ -25,10 +25,22 @@ class ZoneSerializer(serializers.ModelSerializer):
         ordering = ['order']
 
 
-class RecordSerializer(serializers.ModelSerializer):
+class RRsetSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Record
+        model = RRset
+        fields = '__all__'
+        read_only_fields = [
+            'created_at',
+            'updated_at',
+        ]
+        ordering = ['order']
+
+
+class RecordDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecordData
         fields = '__all__'
         read_only_fields = [
             'created_at',
