@@ -44,7 +44,7 @@ class DomainView(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        user = self.request.query_params.get('user')
+        user = self.request.query_params.get('user', None)
 
         if user is not None:
             queryset = self.queryset.filter(user=user)
@@ -60,7 +60,7 @@ class ZoneView(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         
-        domain = self.request.query_params.get('domain')
+        domain = self.request.query_params.get('domain', None)
 
         if domain is not None:
             queryset = self.queryset.filter(domain=domain)
@@ -69,7 +69,7 @@ class ZoneView(viewsets.ModelViewSet):
     
 class ZoneUpdateView(views.APIView):
     def put(self, request, *args, **kwargs):
-        domain_id = self.request.query_params.get('domain')
+        domain_id = self.request.query_params.get('domain', None)
         domain = Domain.objects.get(id=domain_id)
         zones = domain.zones.all()
 
@@ -88,7 +88,7 @@ class RRsetView(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        zone = self.request.query_params.get('zone')
+        zone = self.request.query_params.get('zone', None)
 
         if zone is not None:
             queryset = self.queryset.filter(zone=zone)
@@ -113,7 +113,7 @@ class RRsetView(viewsets.ModelViewSet):
 
 class RRsetUpdateView(views.APIView):
     def put(self, request, *args, **kwargs):
-        zone_id = self.request.query_params.get('zone')
+        zone_id = self.request.query_params.get('zone', None)
         zone = Zone.objects.get(id=zone_id)
         rrsets = zone.rrsets.all()
 
