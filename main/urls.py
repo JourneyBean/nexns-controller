@@ -34,5 +34,7 @@ router.register(r'dump', name_views.DumpView, basename='dump')
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('api/v1/', include(router.urls))
+    path('api/v1/', include(router.urls)),
+    path(r'api/v1/zone-update/', name_views.ZoneUpdateView.as_view(), name='zone-update'),
+    path(r'api/v1/rrsets-update/', name_views.RRsetUpdateView.as_view(), name='rrsets-update'),
 ]

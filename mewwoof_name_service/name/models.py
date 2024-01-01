@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Domain(models.Model):
     user = models.ForeignKey(User, related_name='domains', on_delete=models.CASCADE)
     domain = models.CharField(max_length=300)
-    description = models.CharField(max_length=1000)
+    description = models.CharField(max_length=1000, blank=True)
     mname = models.CharField(max_length=300)
     rname = models.CharField(max_length=300)
     serial = models.CharField(max_length=10)
@@ -31,8 +31,8 @@ class Zone(models.Model):
 
 class RRset(models.Model):
     zone = models.ForeignKey(Zone, related_name='rrsets', on_delete=models.CASCADE)
-    name = models.CharField(max_length=300)
-    description = models.CharField(max_length=1000)
+    name = models.CharField(max_length=300, blank=True)
+    description = models.CharField(max_length=1000, blank=True)
     type = models.CharField(max_length=20)
     order = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
