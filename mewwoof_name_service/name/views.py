@@ -19,6 +19,7 @@ def bulk_update(original_set, data, serializer_class, on_save_fn=None):
             need_updated_set.append((serializer, d))
             continue
 
+        del d["id"]
         serializer = serializer_class(data=d)
         if not serializer.is_valid():
             raise ValueError(f'data not valid: {d}, {serializer.errors}')
@@ -118,7 +119,9 @@ class RRsetUpdateView(views.APIView):
         rrsets = zone.rrsets.all()
 
         def on_rrset_save(serializer: RRsetSerializer, data: dict, instance: RRset):
-            bulk_update(instance.records, data["records"], RecordDataSerializer)
+            for record in data["records"]:
+                record["rrset"] = instance.id
+            bulk_update(instance.records.all(), data["records"], RecordDataSerializer)
 
         bulk_update(rrsets, request.data, RRsetSerializer, on_save_fn=on_rrset_save)
 
