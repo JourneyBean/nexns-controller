@@ -45,8 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'mewwoof_name_service.user',
-    'mewwoof_name_service.name',
+    'nexns.user',
+    'nexns.name',
 ]
 
 MIDDLEWARE = [

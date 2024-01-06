@@ -19,8 +19,8 @@ from django.urls import path, include
 from rest_framework import routers
 
 from . import views as main_views
-import mewwoof_name_service.user.views as user_views
-import mewwoof_name_service.name.views as name_views
+import nexns.user.views as user_views
+import nexns.name.views as name_views
 
 router = routers.DefaultRouter()
 
