@@ -21,6 +21,7 @@ from rest_framework import routers
 from . import views as main_views
 import nexns.user.views as user_views
 import nexns.name.views as name_views
+import nexns.client.views as client_views
 
 router = routers.DefaultRouter()
 
@@ -31,6 +32,7 @@ router.register(r'zone', name_views.ZoneView)
 router.register(r'rrset', name_views.RRsetView)
 router.register(r'record', name_views.RecordDataView)
 router.register(r'dump', name_views.DumpView, basename='dump')
+router.register(r'publish', client_views.PublishView, basename='publish')
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
