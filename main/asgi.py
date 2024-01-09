@@ -12,7 +12,8 @@ import os
 from django.urls import path
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-from nexns.client.consumers import ClientNotificationConsumer
+from channels.auth import AuthMiddlewareStack
+from nexns.client.consumers import ClientNotificationConsumer, ClientAuthenticationMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
 
@@ -22,7 +23,7 @@ websocket_urlpatterns = [
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": URLRouter(
-        websocket_urlpatterns
+    "websocket": AuthMiddlewareStack(
+        ClientAuthenticationMiddleware(URLRouter(websocket_urlpatterns))    
     ),
 })
