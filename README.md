@@ -38,7 +38,14 @@ NexNS Controller 是 NexNS 服务器的控制中心。装有 NexNS CoreDNS Plugi
     ```bash
     python ./manage.py add_user
     ```
-6. **运行**
+
+6. **创建客户端**
+
+    ```bash
+    python ./manage.py add_client
+    ```
+
+7. **运行**
 
     ```bash
     python ./manage.py runserver
@@ -50,6 +57,6 @@ NexNS Controller 是 NexNS 服务器的控制中心。装有 NexNS CoreDNS Plugi
 
 ## 后续开发计划
 
-- **发布功能：** 支持先编辑数据，再发布
-- **消息支持：** 支持通知 NexNS CoreDNS Plugin 热重载
+- ~~**发布功能：** 支持先编辑数据，再发布~~finished
+- ~~**消息支持：** 支持通知 NexNS CoreDNS Plugin 热重载~~finished
 - **DNSSEC支持：** 发布时对域名进行签名
