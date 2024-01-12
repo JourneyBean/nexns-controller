@@ -1,10 +1,12 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import viewsets, views, response
+
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
 
 
 def bulk_update(original_set, data, serializer_class, on_save_fn=None):
-    
     
     need_delete_set = original_set.exclude(id__in=[o["id"] for o in data])
     need_create_set = []
@@ -182,3 +184,24 @@ class DumpView(viewsets.ViewSet):
         domain_data = self.dump_domain(domain)
 
         return response.Response(domain_data)
+
+
+class PublishView(viewsets.ViewSet):
+
+    def retrieve(self, request, pk: str, format=None):
+
+        domain = Domain.objects.get(id=pk)
+        channel_layer = get_channel_layer()
+
+        async_to_sync(channel_layer.group_send)(
+            'notification',
+            {
+                "type": "notify",
+                "action": "domain-update",
+                "domain": domain.id
+            }
+        )
+
+        return response.Response({
+            'message': "success"
+        })
