@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives.asymmetric.types import (
 )
 
 if TYPE_CHECKING:
-    from .models import RRset
+    from ..models import RRset
 
 
 def generate_ecdsa_key_pair() -> 'tuple[PublicKeyTypes, PrivateKeyTypes]':
