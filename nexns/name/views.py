@@ -166,3 +166,74 @@ class PublishView(viewsets.ViewSet):
         return response.Response({
             'message': "success"
         })
+
+
+def get_rrset(request, pk: str) -> 'tuple[Domain, Zone, RRset]':
+    domain_id = request.query_params.get('domain_id', None)
+    domain_name = request.query_params.get('domain_name', None)
+    if domain_id is None and domain_name is None:
+        raise SuspiciousOperation('Invalid query `domain_id` or `domain_name`')
+    if domain_id is not None:
+        domain = Domain.objects.get(id=domain_id)
+    else:
+        domain = Domain.objects.get(domain=domain_name)
+
+    zone_id = request.query_params.get('zone_id', None)
+    zone_name = request.query_params.get('zone_name', None)
+    if zone_id is None and zone_name is None:
+        raise SuspiciousOperation('Invalid query `zone_id` or `zone_name`.')
+    if zone_id is not None:
+        zone = domain.zones.get(id=zone_id)
+    else:
+        zone = domain.zones.get(name=zone_name)
+
+    subdomain = request.query_params.get('subdomain', '')
+    dns_type = request.query_params.get('type', None)
+    if dns_type is None:
+        raise SuspiciousOperation('Invalid query `type`.')
+    
+    
+    rrset = zone.rrsets.get(name=subdomain, type=dns_type)
+    return domain, zone, rrset
+    
+
+class RecordQuickUpdateView(viewsets.ViewSet):
+
+    def retrieve(self, request, pk=None):
+        _, _, rrset = get_rrset(request, pk)
+        serializer = RecordDataSerializer(rrset.records, many=True)
+        return response.Response(serializer.data)
+
+    def update(self, request, pk=None):
+        request_data = request.data
+        if isinstance(request_data, QueryDict):
+            request_data = request_data.dict()
+        domain, zone, rrset = get_rrset(request, pk)
+        
+        records = rrset.records.all()
+
+        if len(records) == 1 and records[0].data == request_data['data']:
+            # exactly the same
+            if records[0].ttl == int(request_data.get('ttl', records[0].ttl)):
+                return response.Response({'status': 'success'}, 202)
+            # update ttl
+            else:
+                records[0].ttl = int(request_data['ttl'])
+                records[0].save()
+
+                notify_domain_update(domain.id)
+                return response.Response({'status': 'success'}, 200)
+        
+        # clear all records and add new record
+        for r in records:
+            r.delete()
+
+        new_record = RecordData()
+        new_record.rrset = rrset
+        new_record.ttl = request_data.get('ttl', domain.ttl)
+        new_record.data = request_data['data']
+        new_record.order = 1
+        new_record.save()
+
+        notify_domain_update(domain.id)
+        return response.Response({'status': 'success'}, 200)

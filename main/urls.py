@@ -39,4 +39,5 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path(r'api/v1/zone-update/', name_views.ZoneUpdateView.as_view(), name='zone-update'),
     path(r'api/v1/rrsets-update/', name_views.RRsetUpdateView.as_view(), name='rrsets-update'),
+    path(r'api/v1/record-quick-update/', name_views.RecordQuickUpdateView.as_view({'get': 'retrieve', 'put': 'update'}), name='record-update-retrieve'),
 ]
