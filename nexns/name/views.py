@@ -1,6 +1,8 @@
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from rest_framework import viewsets, views, response
+from django.core.exceptions import SuspiciousOperation
+from django.http import QueryDict
+
+from nexns.client.lib import notify_domain_update
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
@@ -158,16 +160,8 @@ class PublishView(viewsets.ViewSet):
     def retrieve(self, request, pk: str, format=None):
 
         domain = Domain.objects.get(id=pk)
-        channel_layer = get_channel_layer()
 
-        async_to_sync(channel_layer.group_send)(
-            'notification',
-            {
-                "type": "notify",
-                "action": "domain-update",
-                "domain": domain.id
-            }
-        )
+        notify_domain_update(domain.id)
 
         return response.Response({
             'message': "success"
