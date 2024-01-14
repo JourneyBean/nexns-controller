@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'nexns.user',
     'nexns.name',
     'nexns.client',
+    'nexns.variable',
 ]
 
 MIDDLEWARE = [
