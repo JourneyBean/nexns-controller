@@ -36,12 +36,12 @@ def update_user_variables(user) -> 'dict[str, RecordExpression]':
     queryset = Variable.objects.filter(user=user)
 
     need_process = queryset
+    processed = {}
 
     while len(need_process):
 
         tmp = {}
         has_modification = False
-        processed = {}
 
         for obj in need_process:
             
