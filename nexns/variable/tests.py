@@ -2,7 +2,13 @@ from django.test import TestCase
 
 from django.contrib.auth.models import User
 from nexns.variable.models import Variable
-from nexns.variable.lib import parse_ip, calculate_ip, get_user_variables_dict, UserVariablesMapping
+from nexns.variable.lib import (
+    parse_ip,
+    calculate_ip,
+    get_user_variables_dict,
+    update_user_variables,
+    UserVariablesMapping,
+)
 
 
 class TestExpressionHandling(TestCase):
@@ -169,17 +175,15 @@ class GetUserVarialbesTestCase(TestCase):
             'public6_pc': '2400::5678',
         }
 
-        User.objects.create_user('test_user', 'test@nexns.io', 'admin@123')
+        self.user = User.objects.create_user('test_user', 'test@nexns.io', 'admin@123')
         for k in self.data:
             Variable.objects.create(user_id=1, name=k, text=self.data[k])
 
     def test_get_user_variables_dict(self):
 
-        m = UserVariablesMapping(1)
-        d = dict(m)
-        self.assertDictEqual(d, self.data)
-
-        d = get_user_variables_dict(1)
+        update_user_variables(self.user)
+        
+        d = get_user_variables_dict(self.user)
         for key in self.result_data:
             self.assertIn(key, d)
             self.assertEqual(str(d[key]), self.result_data[key])
