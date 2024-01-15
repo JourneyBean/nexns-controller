@@ -22,6 +22,7 @@ from . import views as main_views
 import nexns.user.views as user_views
 import nexns.name.views as name_views
 import nexns.client.views as client_views
+import nexns.variable.views as variable_views
 
 router = routers.DefaultRouter()
 
@@ -33,6 +34,7 @@ router.register(r'rrset', name_views.RRsetView)
 router.register(r'record', name_views.RecordDataView)
 router.register(r'dump', name_views.DumpView, basename='dump')
 router.register(r'publish', name_views.PublishView, basename='publish')
+router.register(r'variable', variable_views.VariableView)
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
