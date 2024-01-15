@@ -5,8 +5,8 @@ from .exceptions import ParseError
 
 
 class UserVariablesMapping(collections.abc.Mapping):
-    def __init__(self, user_id: int):
-        self.queryset = Variable.objects.filter(user=user_id)
+    def __init__(self, user):
+        self.queryset = Variable.objects.filter(user=user)
 
     def __getitem__(self, key):
         return self.queryset.get(name=key).text
@@ -23,12 +23,12 @@ class UserVariablesMapping(collections.abc.Mapping):
         return
 
 
-def get_user_variables_dict(user_id: int) -> 'dict[str, RecordExpression]':
+def get_user_variables_dict(user) -> 'dict[str, RecordExpression]':
     """
     all {name: text} k-v pairs of a user
     """
     
-    original = dict(UserVariablesMapping(user_id))
+    original = dict(UserVariablesMapping(user))
 
     need_process = original
     processed = {}

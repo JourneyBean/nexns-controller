@@ -6,7 +6,8 @@ from nexns.client.lib import notify_domain_update
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
-from .lib.bulk_update import bulk_update
+from .lib import bulk_update, dump_domain
+
 
 class DomainView(viewsets.ModelViewSet):
 
@@ -39,6 +40,7 @@ class ZoneView(viewsets.ModelViewSet):
 
         return queryset.order_by('order')
     
+
 class ZoneUpdateView(views.APIView):
     def put(self, request, *args, **kwargs):
         domain_id = self.request.query_params.get('domain', None)
@@ -107,34 +109,6 @@ class RecordDataView(viewsets.ModelViewSet):
 
 class DumpView(viewsets.ViewSet):
 
-    def dump_domain(self, domain: 'Domain'):
-        domain_data = DomainSerializer(domain).data
-        
-        zones = domain.zones.all().order_by('order')
-        zones_data = []
-        for zone in zones:
-
-            zone_data = ZoneSerializer(zone).data
-
-            rrsets = zone.rrsets.all().order_by('order')
-            rrsets_data = []
-
-            for rrset in rrsets:
-                rrset_data = RRsetSerializer(rrset).data
-                records_data = RecordDataSerializer(rrset.records, many=True).data
-                rrset_data['records'] = records_data
-
-                rrsets_data.append(rrset_data)
-
-            zone_data['rrsets'] = rrsets_data
-
-            zones_data.append(zone_data)
-
-        return {
-            'domain': domain_data,
-            'zones': zones_data
-        }
-
     def list(self, request):
 
         domains_data = []
@@ -150,7 +124,7 @@ class DumpView(viewsets.ViewSet):
         else:
             domain = Domain.objects.get(domain=pk)
         
-        domain_data = self.dump_domain(domain)
+        domain_data = dump_domain(domain)
 
         return response.Response(domain_data)
 
