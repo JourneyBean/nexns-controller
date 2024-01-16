@@ -33,7 +33,6 @@ router.register(r'zone', name_views.ZoneView)
 router.register(r'rrset', name_views.RRsetView)
 router.register(r'record', name_views.RecordDataView)
 router.register(r'dump', name_views.DumpView, basename='dump')
-router.register(r'publish', name_views.PublishView, basename='publish')
 router.register(r'variable', variable_views.VariableView)
 
 urlpatterns = [

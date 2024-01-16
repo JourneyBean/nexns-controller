@@ -1,4 +1,4 @@
-from rest_framework import viewsets, views, response
+from rest_framework import viewsets, views, response, decorators
 from django.core.exceptions import SuspiciousOperation
 from django.http import QueryDict
 
@@ -24,6 +24,18 @@ class DomainView(viewsets.ModelViewSet):
 
         return queryset
     
+    @decorators.action(methods=["POST"], detail=True)
+    def apply(self, request, pk=None):
+        """Inform servers to reload this domain"""
+
+        domain: 'Domain' = self.get_object()
+
+        notify_domain_update(domain.id)
+
+        return response.Response({
+            'message': "success"
+        })
+
 
 class ZoneView(viewsets.ModelViewSet):
 
@@ -127,19 +139,6 @@ class DumpView(viewsets.ViewSet):
         domain_data = dump_domain(domain)
 
         return response.Response(domain_data)
-
-
-class PublishView(viewsets.ViewSet):
-
-    def retrieve(self, request, pk: str, format=None):
-
-        domain = Domain.objects.get(id=pk)
-
-        notify_domain_update(domain.id)
-
-        return response.Response({
-            'message': "success"
-        })
 
 
 def get_rrset(request, pk: str) -> 'tuple[Domain, Zone, RRset]':
