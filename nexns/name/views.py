@@ -6,6 +6,7 @@ from nexns.client.lib import notify_domain_update
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
+from .validators import DomainPublishValidator
 from .lib import bulk_update, dump_domain
 
 
@@ -29,6 +30,9 @@ class DomainView(viewsets.ModelViewSet):
         """Inform servers to reload this domain"""
 
         domain: 'Domain' = self.get_object()
+
+        # check domain
+        DomainPublishValidator()(domain)
 
         notify_domain_update(domain.id)
 

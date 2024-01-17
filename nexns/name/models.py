@@ -42,7 +42,8 @@ class RRset(models.Model):
 class RecordData(models.Model):
     rrset = models.ForeignKey(RRset, related_name='records', on_delete=models.CASCADE)
     ttl = models.IntegerField()
-    data = models.CharField(max_length=65536)
+    text = models.CharField(max_length=65536, null=False, blank=True)
+    val = models.CharField(max_length=65536, null=True, blank=True)
     order = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

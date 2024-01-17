@@ -28,7 +28,8 @@ def dump_domain(domain: 'Domain'):
                 records_data.append({
                     'id': record_data.id,
                     'ttl': record_data.ttl,
-                    'data': str(RecordExpression(record_data.data, variables)),
+                    'text': record_data.text,
+                    'val': record_data.val,
                     'order': record_data.order,
                 })
             rrset_data['records'] = records_data
