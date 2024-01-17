@@ -129,7 +129,7 @@ class DumpView(viewsets.ViewSet):
 
         domains_data = []
         for domain in Domain.objects.all():
-            domains_data.append(self.dump_domain(domain))
+            domains_data.append(dump_domain(domain))
 
         return response.Response(domains_data)
 
