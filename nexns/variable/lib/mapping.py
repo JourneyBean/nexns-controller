@@ -40,7 +40,7 @@ def update_user_variables(user) -> 'dict[str, RecordExpression]':
 
     while len(need_process):
 
-        tmp = {}
+        tmp = []
         has_modification = False
 
         for obj in need_process:
@@ -66,7 +66,7 @@ def update_user_variables(user) -> 'dict[str, RecordExpression]':
 
     if len(need_process):
         try:
-            RecordExpression(need_process[list(need_process.keys())[0]], processed)
+            RecordExpression(need_process[0].text, processed)
         except ParseError as e:
             raise e
 
