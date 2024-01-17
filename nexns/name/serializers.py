@@ -11,6 +11,15 @@ class DomainSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+    
+    def to_internal_value(self, data):
+        # Access the current user from the context
+        # user = self.context['request'].user 
+
+        # Update the "user" field with the current user's ID
+        data['user'] = 1
+
+        return super().to_internal_value(data)
         
 
 class ZoneSerializer(serializers.ModelSerializer):
