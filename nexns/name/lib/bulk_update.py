@@ -8,15 +8,13 @@ def bulk_update(original_set, data, serializer_class, on_save_fn=None):
     for d in data:
         if d["id"] > 0:
             serializer = serializer_class(original_set.get(id=d["id"]), data=d)
-            if not serializer.is_valid():
-                raise ValueError(f'data not valid: {d}, {serializer.errors}')
+            serializer.is_valid(raise_exception=True)
             need_updated_set.append((serializer, d))
             continue
 
         del d["id"]
         serializer = serializer_class(data=d)
-        if not serializer.is_valid():
-            raise ValueError(f'data not valid: {d}, {serializer.errors}')
+        serializer.is_valid(raise_exception=True)
         need_create_set.append((serializer, d))
 
     # perform change
