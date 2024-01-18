@@ -6,7 +6,7 @@ from nexns.client.lib import notify_domain_update
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
-from .validators import DomainPublishValidator
+from .validators import DomainPublishValidator, DomainRecordValidator
 from .lib import bulk_update, dump_domain
 
 
@@ -33,6 +33,7 @@ class DomainView(viewsets.ModelViewSet):
 
         # check domain
         DomainPublishValidator()(domain)
+        DomainRecordValidator()(domain)
 
         notify_domain_update(domain.id)
 
