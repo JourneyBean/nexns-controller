@@ -54,13 +54,14 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'nexns.client.middlewares.ClientAuthMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'nexns.client.middlewares.ClientAuthMiddleware',
+    'nexns.user.middlewares.ApiKeyAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
