@@ -3,6 +3,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import QueryDict
 
 from nexns.client.lib import notify_domain_update
+from nexns.client.permissions import IsAuthenticatedClient
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
@@ -125,6 +126,8 @@ class RecordDataView(viewsets.ModelViewSet):
 
 
 class DumpView(viewsets.ViewSet):
+
+    permission_classes = [IsAuthenticatedClient]
 
     def list(self, request):
 
