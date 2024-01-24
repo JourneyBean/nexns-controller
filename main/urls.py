@@ -28,6 +28,7 @@ router = routers.DefaultRouter()
 
 router.register(r'status', main_views.StatusView, basename='status')
 router.register(r'user', user_views.UserView)
+router.register(r'current-user', user_views.CurrentUserView, basename='current_user')
 router.register(r'domain', name_views.DomainView)
 router.register(r'zone', name_views.ZoneView)
 router.register(r'rrset', name_views.RRsetView)
