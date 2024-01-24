@@ -7,8 +7,12 @@ class ClientAuthMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        client_id = request.headers.get('x-client-id')
-        client_secret = request.headers.get('x-client-secret')
+        client_id = request.headers.get('x-client-id', None)
+        client_secret = request.headers.get('x-client-secret', None)
+
+        if client_id is None and client_secret is None:
+            response = self.get_response(request)
+            return response
 
         try:
             client = Client.objects.get(uuid=client_id)
