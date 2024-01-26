@@ -47,6 +47,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'channels',
+    # allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.openid_connect',
+    # nexns
     'nexns.user',
     'nexns.name',
     'nexns.client',
@@ -62,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'nexns.client.middlewares.ClientAuthMiddleware',
     'nexns.user.middlewares.ApiKeyAuthMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -123,6 +130,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Authentication Settings
+# We use django-allauth as the only authentication provider.
+AUTHENTICATION_BACKENDS = [
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
