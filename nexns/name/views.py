@@ -39,6 +39,97 @@ class DomainView(viewsets.ModelViewSet):
         return response.Response({
             'message': "success"
         })
+    
+    @decorators.action(
+        methods=["GET"],
+        detail=False,
+        url_path='dump',
+        permission_classes=[IsAuthenticatedClient]
+    )
+    def dump_all(self, request):
+        """Dump all domain data for client"""
+
+        domains_data = []
+        for domain in Domain.objects.all():
+            domains_data.append(dump_domain(domain))
+
+        return response.Response(domains_data)
+
+    @decorators.action(
+        methods=["GET"],
+        detail=True,
+        url_path='dump',
+        permission_classes=[IsAuthenticatedClient]
+    )
+    def dump(self, request, pk: str):
+        """Dump one domain for client"""
+
+        if str(pk).isnumeric():
+            domain = Domain.objects.get(id=pk)
+        else:
+            domain = Domain.objects.get(domain=pk)
+        
+        domain_data = dump_domain(domain)
+
+        return response.Response(domain_data)
+
+    @decorators.action(
+        methods=["GET"],
+        detail=False,
+        url_path='quick'
+    )
+    def quick_get(self, request):
+        """Quickly get records via url query string"""
+
+        domain, _, rrset = get_rrset(request)
+
+        check_domain_user(request, domain)
+        
+        serializer = RecordDataSerializer(rrset.records, many=True)
+        return response.Response(serializer.data)
+
+    @decorators.action(
+        methods=["POST", "PUT"],
+        detail=False,
+        url_path='quick'
+    )
+    def quick_update(self, request):
+        """Quickly update records via url query string and multiform data"""
+
+        request_data = request.data
+        if isinstance(request_data, QueryDict):
+            request_data = request_data.dict()
+        domain, _, rrset = get_rrset(request)
+
+        check_domain_user(request, domain)
+        
+        records = rrset.records.all()
+
+        if len(records) == 1 and records[0].data == request_data['data']:
+            # exactly the same
+            if records[0].ttl == int(request_data.get('ttl', records[0].ttl)):
+                return response.Response({'status': 'success'}, 202)
+            # update ttl
+            else:
+                records[0].ttl = int(request_data['ttl'])
+                records[0].save()
+
+                notify_domain_update(domain.id)
+                return response.Response({'status': 'success'}, 200)
+        
+        # clear all records and add new record
+        for r in records:
+            r.delete()
+
+        new_record = RecordData()
+        new_record.rrset = rrset
+        new_record.ttl = request_data.get('ttl', domain.ttl)
+        new_record.data = request_data['data']
+        new_record.order = 1
+        new_record.save()
+
+        notify_domain_update(domain.id)
+        return response.Response({'status': 'success'}, 200)
 
 
 class ZoneView(viewsets.ModelViewSet):
@@ -62,16 +153,10 @@ class ZoneView(viewsets.ModelViewSet):
 
         return queryset
 
-    
-
-class ZoneUpdateView(views.APIView):
-
-    permission_classes = [
-        IsAuthenticatedUser | 
-        IsAuthenticatedApiKey & ApiKeyZonePermission
-    ]
-
-    def put(self, request, *args, **kwargs):
+    @decorators.action(methods=["POST", "PUT"], detail=False, url_path='bulk-update')
+    def bulk_update(self, request, *args, **kwargs):
+        """Bulk update a zone, including rrsets and record data"""
+        
         domain_id = self.request.query_params.get('domain', None)
         domain = Domain.objects.get(id=domain_id)
 
@@ -122,15 +207,10 @@ class RRsetView(viewsets.ModelViewSet):
                 data.append(d)
             return response.Response(data)
 
+    @decorators.action(methods=["POST", "PUT"], detail=False, url_path='bulk-update')
+    def bulk_update(self, request, *args, **kwargs):
+        """Bulk update rrset, including nested record data"""
 
-class RRsetUpdateView(views.APIView):
-
-    permission_classes = [
-        IsAuthenticatedUser | 
-        IsAuthenticatedApiKey & ApiKeyRRsetPermission
-    ]
-
-    def put(self, request, *args, **kwargs):
         zone_id = self.request.query_params.get('zone', None)
         zone = Zone.objects.get(id=zone_id)
 
@@ -166,31 +246,7 @@ class RecordDataView(viewsets.ModelViewSet):
         return queryset
 
 
-class DumpView(viewsets.ViewSet):
-
-    permission_classes = [IsAuthenticatedClient | IsSuperUser]
-
-    def list(self, request):
-
-        domains_data = []
-        for domain in Domain.objects.all():
-            domains_data.append(dump_domain(domain))
-
-        return response.Response(domains_data)
-
-    def retrieve(self, request, pk: str, format=None):
-
-        if str(pk).isnumeric():
-            domain = Domain.objects.get(id=pk)
-        else:
-            domain = Domain.objects.get(domain=pk)
-        
-        domain_data = dump_domain(domain)
-
-        return response.Response(domain_data)
-
-
-def get_rrset(request, pk: str) -> 'tuple[Domain, Zone, RRset]':
+def get_rrset(request) -> 'tuple[Domain, Zone, RRset]':
     domain_id = request.query_params.get('domain_id', None)
     domain_name = request.query_params.get('domain_name', None)
     if domain_id is None and domain_name is None:
@@ -217,54 +273,3 @@ def get_rrset(request, pk: str) -> 'tuple[Domain, Zone, RRset]':
     
     rrset = zone.rrsets.get(name=subdomain, type=dns_type)
     return domain, zone, rrset
-    
-
-class RecordQuickUpdateView(viewsets.ViewSet):
-
-    permission_classes = [IsAuthenticatedUser | IsAuthenticatedApiKey]
-
-    def retrieve(self, request, pk=None):
-        domain, _, rrset = get_rrset(request, pk)
-
-        # check user id
-        check_domain_user(request, domain)
-        
-        serializer = RecordDataSerializer(rrset.records, many=True)
-        return response.Response(serializer.data)
-
-    def update(self, request, pk=None):
-        request_data = request.data
-        if isinstance(request_data, QueryDict):
-            request_data = request_data.dict()
-        domain, _, rrset = get_rrset(request, pk)
-
-        # check user id
-        check_domain_user(request, domain)
-        
-        records = rrset.records.all()
-
-        if len(records) == 1 and records[0].data == request_data['data']:
-            # exactly the same
-            if records[0].ttl == int(request_data.get('ttl', records[0].ttl)):
-                return response.Response({'status': 'success'}, 202)
-            # update ttl
-            else:
-                records[0].ttl = int(request_data['ttl'])
-                records[0].save()
-
-                notify_domain_update(domain.id)
-                return response.Response({'status': 'success'}, 200)
-        
-        # clear all records and add new record
-        for r in records:
-            r.delete()
-
-        new_record = RecordData()
-        new_record.rrset = rrset
-        new_record.ttl = request_data.get('ttl', domain.ttl)
-        new_record.data = request_data['data']
-        new_record.order = 1
-        new_record.save()
-
-        notify_domain_update(domain.id)
-        return response.Response({'status': 'success'}, 200)

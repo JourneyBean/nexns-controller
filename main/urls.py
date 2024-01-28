@@ -33,14 +33,10 @@ router.register(r'domain', name_views.DomainView)
 router.register(r'zone', name_views.ZoneView)
 router.register(r'rrset', name_views.RRsetView)
 router.register(r'record', name_views.RecordDataView)
-router.register(r'dump', name_views.DumpView, basename='dump')
 router.register(r'variable', variable_views.VariableView)
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('api/v1/', include(router.urls)),
-    path(r'api/v1/zone-update/', name_views.ZoneUpdateView.as_view(), name='zone-update'),
-    path(r'api/v1/rrsets-update/', name_views.RRsetUpdateView.as_view(), name='rrsets-update'),
-    path(r'api/v1/record-quick-update/', name_views.RecordQuickUpdateView.as_view({'get': 'retrieve', 'put': 'update'}), name='record-update-retrieve'),
 ]
