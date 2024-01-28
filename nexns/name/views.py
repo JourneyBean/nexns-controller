@@ -4,6 +4,7 @@ from django.http import QueryDict
 
 from nexns.client.lib import notify_domain_update
 from nexns.client.permissions import IsAuthenticatedClient
+from nexns.user.permissions import *
 
 from .models import Domain, Zone, RRset, RecordData
 from .serializers import DomainSerializer, ZoneSerializer, RRsetSerializer, RecordDataSerializer
@@ -15,19 +16,16 @@ class DomainView(viewsets.ModelViewSet):
 
     queryset = Domain.objects.all()
     serializer_class = DomainSerializer
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyDomainPermission
+    ]
 
     def get_queryset(self):
-        queryset = self.queryset
-
-        user = self.request.query_params.get('user', None)
-
-        if user is not None:
-            queryset = self.queryset.filter(user=user)
-
-        return queryset
+        return self.queryset.filter(user=self.request.user)
     
     @decorators.action(methods=["POST"], detail=True)
-    def apply(self, request, pk=None):
+    def apply(self, request, pk):
         """Inform servers to reload this domain"""
 
         domain: 'Domain' = self.get_object()
@@ -45,24 +43,40 @@ class DomainView(viewsets.ModelViewSet):
 
 class ZoneView(viewsets.ModelViewSet):
 
-    queryset = Zone.objects.all()
+    queryset = Zone.objects.all().order_by('order')
     serializer_class = ZoneSerializer
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyZonePermission
+    ]
 
     def get_queryset(self):
-        queryset = self.queryset
-        
+
+        # limit to current user
+        queryset = self.queryset.filter(domain__user=self.request.user)
+
+        # url query: domain        
         domain = self.request.query_params.get('domain', None)
-
         if domain is not None:
-            queryset = self.queryset.filter(domain=domain)
+            queryset = queryset.filter(domain=domain)
 
-        return queryset.order_by('order')
+        return queryset
+
     
 
 class ZoneUpdateView(views.APIView):
+
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyZonePermission
+    ]
+
     def put(self, request, *args, **kwargs):
         domain_id = self.request.query_params.get('domain', None)
         domain = Domain.objects.get(id=domain_id)
+
+        check_domain_user(request, domain)
+
         zones = domain.zones.all()
 
         bulk_update(zones, request.data, ZoneSerializer)
@@ -76,14 +90,20 @@ class RRsetView(viewsets.ModelViewSet):
 
     queryset = RRset.objects.all().order_by('order')
     serializer_class = RRsetSerializer
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyRRsetPermission
+    ]
 
     def get_queryset(self):
-        queryset = self.queryset
 
+        # limit to current user
+        queryset = self.queryset.filter(zone__domain__user=self.request.user)
+
+        # url query: zone
         zone = self.request.query_params.get('zone', None)
-
         if zone is not None:
-            queryset = self.queryset.filter(zone=zone)
+            queryset = queryset.filter(zone=zone)
 
         return queryset
     
@@ -104,9 +124,19 @@ class RRsetView(viewsets.ModelViewSet):
 
 
 class RRsetUpdateView(views.APIView):
+
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyRRsetPermission
+    ]
+
     def put(self, request, *args, **kwargs):
         zone_id = self.request.query_params.get('zone', None)
         zone = Zone.objects.get(id=zone_id)
+
+        # limit to current user
+        check_domain_user(request, zone.domain)
+
         rrsets = zone.rrsets.all()
 
         def on_rrset_save(serializer: RRsetSerializer, data: dict, instance: RRset):
@@ -121,13 +151,24 @@ class RRsetUpdateView(views.APIView):
 
 class RecordDataView(viewsets.ModelViewSet):
 
-    queryset = RecordData.objects.all()
+    queryset = RecordData.objects.all().order_by('order')
     serializer_class = RecordDataSerializer
+    permission_classes = [
+        IsAuthenticatedUser | 
+        IsAuthenticatedApiKey & ApiKeyRecordPermission
+    ]
+
+    def get_queryset(self):
+
+        # limit to current user
+        queryset = self.queryset.filter(rrset__zone__domain__user=self.request.user)
+
+        return queryset
 
 
 class DumpView(viewsets.ViewSet):
 
-    permission_classes = [IsAuthenticatedClient]
+    permission_classes = [IsAuthenticatedClient | IsSuperUser]
 
     def list(self, request):
 
@@ -180,8 +221,14 @@ def get_rrset(request, pk: str) -> 'tuple[Domain, Zone, RRset]':
 
 class RecordQuickUpdateView(viewsets.ViewSet):
 
+    permission_classes = [IsAuthenticatedUser | IsAuthenticatedApiKey]
+
     def retrieve(self, request, pk=None):
-        _, _, rrset = get_rrset(request, pk)
+        domain, _, rrset = get_rrset(request, pk)
+
+        # check user id
+        check_domain_user(request, domain)
+        
         serializer = RecordDataSerializer(rrset.records, many=True)
         return response.Response(serializer.data)
 
@@ -189,7 +236,10 @@ class RecordQuickUpdateView(viewsets.ViewSet):
         request_data = request.data
         if isinstance(request_data, QueryDict):
             request_data = request_data.dict()
-        domain, zone, rrset = get_rrset(request, pk)
+        domain, _, rrset = get_rrset(request, pk)
+
+        # check user id
+        check_domain_user(request, domain)
         
         records = rrset.records.all()
 
