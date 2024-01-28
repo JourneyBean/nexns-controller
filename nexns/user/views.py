@@ -1,13 +1,8 @@
-from rest_framework import viewsets, response, decorators, permissions
+from rest_framework import viewsets, response
 from django.contrib.auth.models import User
-from django.contrib.auth import hashers, password_validation
+from django.middleware.csrf import get_token
+
 from .serializers import UserSerializer
-
-
-class UserView(viewsets.ModelViewSet):
-
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 
 class CurrentUserView(viewsets.ModelViewSet):
@@ -17,3 +12,11 @@ class CurrentUserView(viewsets.ModelViewSet):
 
     def list(self, request):
         return response.Response(UserSerializer(request.user).data)
+
+
+class CsrfTokenView(viewsets.GenericViewSet):
+
+    def list(self, request):
+        csrf_token = get_token(request)
+
+        return response.Response({'csrf_token': csrf_token})
