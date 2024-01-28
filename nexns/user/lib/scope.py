@@ -10,11 +10,12 @@ class ApiKeyScope:
         return s
 
     def __init__(self) -> None:
-        
+
         self.can_read_domains = False
         self.can_create_domains = False
         self.can_modify_domains = False
         self.can_delete_domains = False
+        self.can_apply_domains = False
 
         self.can_read_variables = False
         self.can_create_variables = False
@@ -23,9 +24,13 @@ class ApiKeyScope:
 
         self.can_read_specific_domains = []
         self.can_modify_specific_domains = []
+        self.can_apply_specific_domains = []
 
         self.can_read_specific_zones = []
         self.can_modify_specific_zones = []
+
+        self.can_read_specific_rrsets = []
+        self.can_modify_specific_rrsets = []
 
         self.can_read_specific_records = []
         self.can_modify_specific_records = []
