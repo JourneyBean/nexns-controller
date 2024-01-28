@@ -59,7 +59,11 @@ class DomainView(viewsets.ModelViewSet):
         methods=["GET"],
         detail=True,
         url_path='dump',
-        permission_classes=[IsAuthenticatedClient]
+        permission_classes=[
+            IsAuthenticatedClient |
+            IsAuthenticatedUser | 
+            IsAuthenticatedApiKey & ApiKeyDomainPermission
+        ]
     )
     def dump(self, request, pk: str):
         """Dump one domain for client"""
