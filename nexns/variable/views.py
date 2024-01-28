@@ -26,8 +26,8 @@ class VariableView(viewsets.ModelViewSet):
             VariableSerializer(Variable.objects.filter(user=user), many=True).data
         )
 
-    @decorators.action(detail=False, methods=['PUT'])
-    def bulk(self, request):
+    @decorators.action(detail=False, methods=['POST', 'PUT'], url_path='bulk-update')
+    def bulk_update(self, request):
         queryset = self.get_queryset()
         bulk_update(request, queryset, request.data, self.serializer_class)
 
