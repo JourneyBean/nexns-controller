@@ -1,4 +1,7 @@
 from django.http import JsonResponse
+from django.middleware.csrf import CsrfViewMiddleware
+from django.utils.decorators import decorator_from_middleware
+
 from .lib.scope import ApiKeyScope
 from .models import UserApiKey
 
@@ -25,3 +28,16 @@ class ApiKeyAuthMiddleware:
 
         response = self.get_response(request)
         return response
+    
+
+class CsrfExemptApiKeyMiddleware(CsrfViewMiddleware):
+    def process_view(self, request, callback, callback_args, callback_kwargs):
+        if (getattr(callback, 'csrf_exempt', False) or 
+            getattr(request, 'is_apikey_auth', False)):
+            return None
+        return super().process_view(request, callback, callback_args, callback_kwargs)
+
+
+def csrf_exempt_apikey(view_func):
+    # use this as decorator if needed
+    return decorator_from_middleware(CsrfExemptApiKeyMiddleware)(view_func)

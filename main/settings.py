@@ -130,6 +130,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Rest Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'nexns.user.authentication.SessionAuthenticationExemptApiKeyCsrf',
+    ]
+}
+
 # Authentication Settings
 # We use django-allauth as the only authentication provider.
 AUTHENTICATION_BACKENDS = [
