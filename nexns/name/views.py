@@ -23,7 +23,7 @@ class DomainView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
-    
+
     @decorators.action(methods=["POST"], detail=True)
     def apply(self, request, pk):
         """Inform servers to reload this domain"""
@@ -164,7 +164,7 @@ class ZoneView(viewsets.ModelViewSet):
 
         zones = domain.zones.all()
 
-        bulk_update(zones, request.data, ZoneSerializer)
+        bulk_update(request, zones, request.data, ZoneSerializer)
 
         # 返回
         serializer = ZoneSerializer(domain.zones.all(), many=True)
@@ -222,9 +222,9 @@ class RRsetView(viewsets.ModelViewSet):
         def on_rrset_save(serializer: RRsetSerializer, data: dict, instance: RRset):
             for record in data["records"]:
                 record["rrset"] = instance.id
-            bulk_update(instance.records.all(), data["records"], RecordDataSerializer)
+            bulk_update(request, instance.records.all(), data["records"], RecordDataSerializer)
 
-        bulk_update(rrsets, request.data, RRsetSerializer, on_save_fn=on_rrset_save)
+        bulk_update(request, rrsets, request.data, RRsetSerializer, on_save_fn=on_rrset_save)
 
         return response.Response({'status': 'success'})
 

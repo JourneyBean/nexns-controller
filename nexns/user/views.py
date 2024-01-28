@@ -11,6 +11,8 @@ class CurrentUserView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def list(self, request):
+        if not request.user.is_authenticated:
+            return response.Response({}, 401)
         return response.Response(UserSerializer(request.user).data)
 
 

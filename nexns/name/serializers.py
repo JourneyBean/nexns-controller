@@ -14,10 +14,10 @@ class DomainSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, data):
         # Access the current user from the context
-        # user = self.context['request'].user 
+        user = self.context['request'].user.id
 
         # Update the "user" field with the current user's ID
-        data['user'] = 1
+        data['user'] = user
 
         return super().to_internal_value(data)
         

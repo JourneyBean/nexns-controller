@@ -1,5 +1,4 @@
 from rest_framework import viewsets, response, decorators
-
 from nexns.name.lib.bulk_update import bulk_update
 from nexns.user.permissions import *
 from .models import Variable
@@ -19,7 +18,7 @@ class VariableView(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
     
-    @decorators.action(detail=False, methods=['post'])
+    @decorators.action(detail=False, methods=['POST'])
     def apply(self, request):
         user = request.user
         update_user_variables(user)
@@ -30,7 +29,7 @@ class VariableView(viewsets.ModelViewSet):
     @decorators.action(detail=False, methods=['PUT'])
     def bulk(self, request):
         queryset = self.get_queryset()
-        bulk_update(queryset, request.data, self.serializer_class)
+        bulk_update(request, queryset, request.data, self.serializer_class)
 
         serializer = self.serializer_class(self.get_queryset(), many=True)
         return response.Response(serializer.data)
