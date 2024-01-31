@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class IsAuthenticatedUser(BasePermission):
     
     def has_permission(self, request, view):
-        return not request.is_apikey_auth and request.user and request.user.is_superuser
+        return not request.is_apikey_auth and request.user and request.user.is_authenticated
 
 
 class IsAuthenticatedApiKey(BasePermission):
