@@ -170,6 +170,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # import nexns custom settings
 try:
-    import nexns_settings
+    from nexns_settings import *
 except ImportError:
     pass
